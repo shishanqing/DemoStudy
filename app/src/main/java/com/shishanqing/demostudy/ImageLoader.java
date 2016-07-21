@@ -15,30 +15,39 @@ import java.util.concurrent.Executors;
  */
 public class ImageLoader {
     //图片缓存
-    ImageCache mImageCache = new ImageCache();
+    ImageCache mImageCache = new MemoryCache();
     //线程池,线程数量为CPU的数量
     ExecutorService mExecutorService = Executors.newFixedThreadPool(Runtime
             .getRuntime().availableProcessors());
 
+    //注入缓存实现,用户可以通过该函数设置缓存实现，也就是通常说的依赖注入
+    public void setImageCache(ImageCache cache) {
+        mImageCache = cache;
+    }
     //加载图片
-    public void displayImage(final String url, final ImageView imageView) {
-        Bitmap bitmap = mImageCache.get(url);
+    public void displayImage(final String imageUrl, final ImageView imageView) {
+        Bitmap bitmap = mImageCache.get(imageUrl);
         if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
             return;
         }
-        imageView.setTag(url);
+        //图片没缓存，提交到线程池中下载图片
+        submitLoadRequest(imageUrl, imageView);
+    }
+
+    private void submitLoadRequest(final String imageUrl, final ImageView imageView) {
+        imageView.setTag(imageUrl);
         mExecutorService.submit(new Runnable() {
             @Override
             public void run() {
-                Bitmap bitmap = downloadImage(url);
+                Bitmap bitmap = downloadImage(imageUrl);
                 if (bitmap == null){
                     return;
                 }
-                if (imageView.getTag().equals(url)) {
+                if (imageView.getTag().equals(imageUrl)) {
                     imageView.setImageBitmap(bitmap);
                 }
-                mImageCache.put(url, bitmap);
+                mImageCache.put(imageUrl, bitmap);
             }
         });
     }

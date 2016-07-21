@@ -1,38 +1,14 @@
 package com.shishanqing.demostudy;
 
 import android.graphics.Bitmap;
-import android.util.LruCache;
 
 /**
  * Created by shishanqing on 16-7-21.
- * 处理图片缓存
+ * 图片缓存接口,用来抽象图片缓存的功能。
+ * 定义了获取，缓存图片两个函数，缓存的key是图片的url，值是图片本身。
+ * 内存缓存、SD卡缓存、双缓存都实现了该接口
  */
-public class ImageCache {
-    //图片LRU缓存
-    LruCache<String, Bitmap> mImageCache;
-
-    public ImageCache() {
-        initImageCache();
-    }
-
-    private void initImageCache() {
-        //计算可使用的最大内存
-        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-        //取四分之一的可用内存作为缓存
-        final int cacheSize = maxMemory / 4;
-        mImageCache = new LruCache<String, Bitmap>(cacheSize) {
-            @Override
-            protected int sizeOf(String key, Bitmap bitmap) {
-                return bitmap.getRowBytes() * bitmap.getHeight() / 1024;
-            }
-        };
-    }
-
-    public void put(String url, Bitmap bitmap) {
-        mImageCache.put(url, bitmap);
-    }
-
-    public Bitmap get(String url) {
-        return mImageCache.get(url);
-    }
+public interface ImageCache {
+    public Bitmap get(String url);
+    public void put(String url, Bitmap bmp);
 }
